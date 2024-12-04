@@ -1,10 +1,11 @@
-package org.example.projectmanagement.factory.impl;
+package org.example.projectmanagement.bridge.impl;
 
+import org.example.projectmanagement.bridge.AbstractTaskBridge;
 import org.example.projectmanagement.models.enums.KanbanColumn;
 
-public class KanbanTaskFactory extends AbstractTaskFactory {
+public class KanbanTaskBridge extends AbstractTaskBridge {
 
-    public KanbanTaskFactory() {
+    public KanbanTaskBridge() {
         this.methodology = "Kanban";
     }
 

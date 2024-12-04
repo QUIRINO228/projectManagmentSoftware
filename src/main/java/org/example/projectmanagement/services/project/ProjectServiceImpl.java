@@ -6,9 +6,8 @@ import org.example.projectmanagement.dtos.ProjectDto;
 import org.example.projectmanagement.dtos.TaskDto;
 import org.example.projectmanagement.factory.ProjectFactory;
 import org.example.projectmanagement.factory.ProjectFactoryProvider;
-import org.example.projectmanagement.flyweight.TaskFlyweight;
-import org.example.projectmanagement.flyweight.TaskFlyweightFactory;
-import org.example.projectmanagement.handlers.TaskStatusHandler;
+import org.example.projectmanagement.bridge.TaskBridge;
+import org.example.projectmanagement.bridge.TaskBridgeProvider;
 import org.example.projectmanagement.models.Project;
 import org.example.projectmanagement.models.Task;
 import org.example.projectmanagement.repositories.ProjectRepository;
@@ -32,8 +31,6 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectConverter projectConverter;
     private final TaskConverter taskConverter;
     private final TaskService taskService;
-    private final TaskStatusHandler taskStatusHandlerChain;
-
 
     @Override
     public ProjectDto createProject(ProjectDto projectDto) {
@@ -79,16 +76,8 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
 
-        TaskFlyweight taskFlyweight = TaskFlyweightFactory.getTaskFlyweight(
-                taskDto.getName(),
-                projectId,
-                taskDto.getDescription(),
-                project.getMethodology(),
-                taskDto.getPriority(),
-                taskDto.getDueDate()
-        );
-
-        Task task = new Task(taskFlyweight);
+        TaskBridge taskFactory = TaskBridgeProvider.getFactory(project.getMethodology());
+        Task task = taskFactory.createTask(taskDto);
         Task savedTask = taskService.saveTask(task, files);
 
         project.addTaskId(savedTask.getTaskId());
@@ -108,7 +97,6 @@ public class ProjectServiceImpl implements ProjectService {
         task.setStatus(newStatus);
         taskService.saveTask(task);
 
-        taskStatusHandlerChain.handleTaskStatus(project, task, newStatus);
         projectRepository.save(project);
     }
 

@@ -1,10 +1,11 @@
-package org.example.projectmanagement.factory.impl;
+package org.example.projectmanagement.bridge.impl;
 
+import org.example.projectmanagement.bridge.AbstractTaskBridge;
 import org.example.projectmanagement.models.enums.AgileStatus;
 
-public class AgileTaskFactory extends AbstractTaskFactory {
+public class AgileTaskBridge extends AbstractTaskBridge {
 
-    public AgileTaskFactory() {
+    public AgileTaskBridge() {
         this.methodology = "Agile";
     }
 
