@@ -3,7 +3,7 @@ package org.example.projectmanagement.controllers;
 import lombok.AllArgsConstructor;
 import org.example.projectmanagement.dtos.ProjectDto;
 import org.example.projectmanagement.dtos.TaskDto;
-import org.example.projectmanagement.services.ServiceFacade;
+import org.example.projectmanagement.services.project.ProjectService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,36 +17,37 @@ import java.util.Optional;
 @AllArgsConstructor
 public class ProjectController {
 
-    private final ServiceFacade serviceFacade;
+    private final ProjectService projectService;
+
 
     @PostMapping("/create")
     public ResponseEntity<ProjectDto> createProject(@RequestBody ProjectDto projectDto) {
-        ProjectDto createdProject = serviceFacade.createProject(projectDto);
+        ProjectDto createdProject = projectService.createProject(projectDto);
         return ResponseEntity.ok(createdProject);
     }
 
     @GetMapping("/get/{id}")
     public ResponseEntity<ProjectDto> getProjectById(@PathVariable String id) {
-        Optional<ProjectDto> projectDto = serviceFacade.getProjectById(id);
+        Optional<ProjectDto> projectDto = projectService.getProjectById(id);
         return projectDto.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/all")
     public ResponseEntity<List<ProjectDto>> getAllProjects() {
-        List<ProjectDto> projects = serviceFacade.getAllProjects();
+        List<ProjectDto> projects = projectService.getAllProjects();
         return ResponseEntity.ok(projects);
     }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<ProjectDto> updateProject(@PathVariable String id, @RequestBody ProjectDto projectDto) {
-        ProjectDto updatedProject = serviceFacade.updateProject(id, projectDto);
+        ProjectDto updatedProject = projectService.updateProject(id, projectDto);
         return ResponseEntity.ok(updatedProject);
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable String id) {
-        serviceFacade.deleteProject(id);
+        projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -55,7 +56,7 @@ public class ProjectController {
             @PathVariable String projectId,
             @RequestPart("task") TaskDto taskDto,
             @RequestPart("file") List<MultipartFile> files) throws IOException {
-        TaskDto createdTask = serviceFacade.addTaskToProject(projectId, taskDto, files);
+        TaskDto createdTask = projectService.addTaskToProject(projectId, taskDto, files);
         return ResponseEntity.ok(createdTask);
     }
 
@@ -64,6 +65,6 @@ public class ProjectController {
             @PathVariable String projectId,
             @PathVariable String taskId,
             @RequestParam String newStatus) {
-        serviceFacade.updateTaskStatus(projectId, taskId, newStatus);
+        projectService.updateTaskStatus(projectId, taskId, newStatus);
     }
 }

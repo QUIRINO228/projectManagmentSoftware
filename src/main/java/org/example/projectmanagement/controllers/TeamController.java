@@ -3,7 +3,7 @@ package org.example.projectmanagement.controllers;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.projectmanagement.dtos.TeamDto;
-import org.example.projectmanagement.services.ServiceFacade;
+import org.example.projectmanagement.services.teams.TeamProxy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,12 +19,12 @@ import java.util.Optional;
 @Slf4j
 public class TeamController {
 
-    private final ServiceFacade serviceFacade;
+    private final TeamProxy teamProxy;
 
     @PostMapping("/create")
     public ResponseEntity<Object> createTeam(@RequestBody TeamDto teamDto, @RequestHeader("Authorization") String token) {
         return handleRequest(() -> {
-            TeamDto createdTeam = serviceFacade.createTeam(teamDto);
+            TeamDto createdTeam = teamProxy.createTeam(teamDto);
             return ResponseEntity.ok(Map.of("status", "success", "data", createdTeam));
         });
     }
@@ -32,7 +32,7 @@ public class TeamController {
     @GetMapping("/get/{id}")
     public ResponseEntity<Map<String, Object>> getTeamById(@PathVariable String id, @RequestHeader("Authorization") String token) {
         return handleRequest(() -> {
-            Optional<TeamDto> teamDto = serviceFacade.getTeamById(id, token);
+            Optional<TeamDto> teamDto = teamProxy.getTeamById(id, token);
             return teamDto.map(dto -> ResponseEntity.ok(Map.of("status", "success", "data", dto)))
                     .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "error", "message", "Team not found")));
         });
@@ -41,7 +41,7 @@ public class TeamController {
     @GetMapping("/all")
     public ResponseEntity<Object> getAllTeams(@RequestHeader("Authorization") String token) {
         return handleRequest(() -> {
-            List<TeamDto> teams = serviceFacade.getAllTeams(token);
+            List<TeamDto> teams = teamProxy.getAllTeams(token);
             return ResponseEntity.ok(Map.of("status", "success", "data", teams));
         });
     }
@@ -50,7 +50,7 @@ public class TeamController {
     public ResponseEntity<Object> updateTeam(@PathVariable String id, @RequestBody TeamDto teamDto, @RequestHeader("Authorization") String token) {
         log.info(teamDto.toString());
         return handleRequest(() -> {
-            TeamDto updatedTeam = serviceFacade.updateTeam(id, teamDto, token);
+            TeamDto updatedTeam = teamProxy.updateTeam(id, teamDto, token);
             return ResponseEntity.ok(Map.of("status", "success", "data", updatedTeam));
         });
     }
@@ -58,7 +58,7 @@ public class TeamController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Object> deleteTeam(@PathVariable String id, @RequestHeader("Authorization") String token) {
         return handleRequest(() -> {
-            serviceFacade.deleteTeam(id, token);
+            teamProxy.deleteTeam(id, token);
             return ResponseEntity.noContent().build();
         });
     }
@@ -66,7 +66,7 @@ public class TeamController {
     @PostMapping("/add-to/{teamId}/members/{memberId}")
     public ResponseEntity<Object> addMemberToTeam(@PathVariable String teamId, @PathVariable String memberId, @RequestHeader("Authorization") String token) {
         return handleRequest(() -> {
-            boolean added = serviceFacade.addMemberToTeam(teamId, memberId, token);
+            boolean added = teamProxy.addMemberToTeam(teamId, memberId, token);
             return added ? ResponseEntity.ok(Map.of("status", "success", "message", "Member added successfully"))
                     : ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "error", "message", "Team not found"));
         });

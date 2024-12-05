@@ -14,7 +14,7 @@ import java.util.Optional;
 @Service
 @Slf4j
 @AllArgsConstructor
-public class TeamServiceProxyImpl implements TeamServiceProxy {
+public class TeamProxyImpl implements TeamProxy {
     private final UserService userService;
     private final TeamService teamService;
 

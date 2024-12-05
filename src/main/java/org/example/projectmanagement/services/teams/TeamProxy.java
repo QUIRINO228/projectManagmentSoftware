@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public interface TeamServiceProxy {
+public interface TeamProxy {
     TeamDto createTeam(TeamDto teamDto);
     Optional<TeamDto> getTeamById(String id, String token) throws AccessDeniedException;
     void deleteTeam(String id, String token) throws AccessDeniedException;

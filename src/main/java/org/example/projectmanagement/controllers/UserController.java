@@ -5,7 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.projectmanagement.dtos.AuthRequestDto;
 import org.example.projectmanagement.dtos.AuthResponseDto;
 import org.example.projectmanagement.dtos.UserDto;
-import org.example.projectmanagement.services.ServiceFacade;
+import org.example.projectmanagement.services.user.AuthService;
+import org.example.projectmanagement.services.user.RegistrationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,11 +18,12 @@ import java.util.Map;
 @RequestMapping("/users")
 @Slf4j
 public class UserController {
-    private final ServiceFacade serviceFacade;
+    private final AuthService authService;
+    private final RegistrationService registrationService;
 
     @GetMapping("/authenticate")
     public ResponseEntity<Object> authenticate(@RequestBody AuthRequestDto authRequestDto) {
-        AuthResponseDto authResponse = serviceFacade.authenticate(authRequestDto);
+        AuthResponseDto authResponse = authService.authenticate(authRequestDto);
         return authResponse != null
                 ? ResponseEntity.ok().body(Map.of("message", "Authentication successful", "accessToken", authResponse.getAccessToken(), "refreshToken", authResponse.getRefreshToken()))
                 : ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Authentication failed"));
@@ -29,7 +31,7 @@ public class UserController {
 
     @PostMapping("/registration")
     public ResponseEntity<Object> createUser(@RequestBody UserDto userDto) {
-        return serviceFacade.createUser(userDto)
+        return registrationService.createUser(userDto)
                 ? ResponseEntity.ok().body(Map.of("message", "Registration successful"))
                 : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Registration failed"));
     }
