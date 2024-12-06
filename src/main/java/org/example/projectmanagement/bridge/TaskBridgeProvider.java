@@ -6,11 +6,11 @@ import org.example.projectmanagement.bridge.impl.RupTaskBridge;
 
 public class TaskBridgeProvider {
 
-    public static TaskBridge getFactory(String methodology) {
+    public static TaskBridge getBridge(String methodology, TaskBridge taskBridge) {
         return switch (methodology) {
-            case "Agile" -> new AgileTaskBridge();
-            case "Kanban" -> new KanbanTaskBridge();
-            case "RUP" -> new RupTaskBridge();
+            case "Agile" -> new AgileTaskBridge(taskBridge);
+            case "Kanban" -> new KanbanTaskBridge(taskBridge);
+            case "RUP" -> new RupTaskBridge(taskBridge);
             default -> throw new IllegalArgumentException("Invalid methodology: " + methodology);
         };
     }

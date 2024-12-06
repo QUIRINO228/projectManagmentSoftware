@@ -2,17 +2,19 @@ package org.example.projectmanagement.services.project;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.projectmanagement.bridge.TaskBridge;
+import org.example.projectmanagement.bridge.TaskBridgeProvider;
 import org.example.projectmanagement.dtos.ProjectDto;
 import org.example.projectmanagement.dtos.TaskDto;
 import org.example.projectmanagement.factory.ProjectFactory;
 import org.example.projectmanagement.factory.ProjectFactoryProvider;
-import org.example.projectmanagement.bridge.TaskBridge;
-import org.example.projectmanagement.bridge.TaskBridgeProvider;
+import org.example.projectmanagement.handlers.TaskStatusHandler;
 import org.example.projectmanagement.models.Project;
 import org.example.projectmanagement.models.Task;
 import org.example.projectmanagement.repositories.ProjectRepository;
 import org.example.projectmanagement.services.task.TaskConverter;
 import org.example.projectmanagement.services.task.TaskService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,7 +25,6 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@AllArgsConstructor
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
@@ -31,7 +32,20 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectConverter projectConverter;
     private final TaskConverter taskConverter;
     private final TaskService taskService;
-
+    private final TaskStatusHandler taskStatusHandler;
+    public ProjectServiceImpl(ProjectRepository projectRepository,
+                              ProjectValidator projectValidator,
+                              ProjectConverter projectConverter,
+                              TaskConverter taskConverter,
+                              TaskService taskService,
+                              @Qualifier("agileTaskStatusHandler") TaskStatusHandler taskStatusHandler) {
+        this.projectRepository = projectRepository;
+        this.projectValidator = projectValidator;
+        this.projectConverter = projectConverter;
+        this.taskConverter = taskConverter;
+        this.taskService = taskService;
+        this.taskStatusHandler = taskStatusHandler;
+    }
     @Override
     public ProjectDto createProject(ProjectDto projectDto) {
         projectValidator.validateProjectDto(projectDto);
@@ -76,8 +90,8 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
 
-        TaskBridge taskFactory = TaskBridgeProvider.getFactory(project.getMethodology());
-        Task task = taskFactory.createTask(taskDto);
+        TaskBridge taskBridge = TaskBridgeProvider.getBridge(project.getMethodology(), null);
+        Task task = taskBridge.createTask(taskDto, taskBridge.getInitialStatus(), project.getMethodology());
         Task savedTask = taskService.saveTask(task, files);
 
         project.addTaskId(savedTask.getTaskId());
@@ -94,9 +108,8 @@ public class ProjectServiceImpl implements ProjectService {
         Task task = taskService.getTaskById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
 
-        task.setStatus(newStatus);
+        taskStatusHandler.handleTaskStatus(project, task, newStatus);
         taskService.saveTask(task);
-
         projectRepository.save(project);
     }
 

@@ -3,7 +3,9 @@ package org.example.projectmanagement.factory;
 import org.example.projectmanagement.factory.impl.AgileProjectFactory;
 import org.example.projectmanagement.factory.impl.KanbanProjectFactory;
 import org.example.projectmanagement.factory.impl.RupProjectFactory;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ProjectFactoryProvider {
 
     public static ProjectFactory getFactory(String methodology) {

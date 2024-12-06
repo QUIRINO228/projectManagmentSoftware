@@ -1,23 +1,19 @@
 package org.example.projectmanagement.bridge;
 
+import lombok.AllArgsConstructor;
 import org.example.projectmanagement.dtos.TaskDto;
-import org.example.projectmanagement.bridge.TaskBridge;
 import org.example.projectmanagement.models.Task;
 
+@AllArgsConstructor
 public abstract class AbstractTaskBridge implements TaskBridge {
     protected String methodology;
+    protected TaskBridge taskBridge;
 
-    @Override
+
     public Task createTask(TaskDto taskDto) {
-        return Task.builder()
-                .projectId(taskDto.getProjectId())
-                .name(taskDto.getName())
-                .description(taskDto.getDescription())
-                .priority(taskDto.getPriority())
-                .status(getInitialStatus())
-                .methodology(methodology)
-                .build();
+        return taskBridge.createTask(taskDto, getInitialStatus(), methodology);
     }
 
-    protected abstract String getInitialStatus();
+    @Override
+    public abstract String getInitialStatus();
 }

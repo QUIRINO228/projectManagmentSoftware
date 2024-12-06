@@ -3,6 +3,7 @@ package org.example.projectmanagement.services.version;
 import lombok.AllArgsConstructor;
 import org.example.projectmanagement.dtos.FileMetadataDto;
 import org.example.projectmanagement.dtos.VersionDto;
+import org.example.projectmanagement.flyweight.VersionFlyweightFactory;
 import org.example.projectmanagement.models.Project;
 import org.example.projectmanagement.models.Version;
 import org.example.projectmanagement.repositories.ProjectRepository;
@@ -11,10 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -40,12 +39,11 @@ public class VersionServiceImpl implements VersionService {
                 .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
 
         FileMetadataDto fileMetadata = fileService.uploadFilesWithMetadata(List.of(file)).get(0);
-        Version version = Version.builder()
-                .versionId(UUID.randomUUID().toString())
-                .versionName(versionDto.getVersionName())
-                .releaseDate(LocalDate.parse(versionDto.getReleaseDate()))
-                .executableFilePath(fileMetadata.getFilePath())
-                .build();
+        Version version = VersionFlyweightFactory.getVersion(
+                versionDto.getVersionName(),
+                versionDto.getReleaseDate(),
+                fileMetadata.getFilePath()
+        );
 
         project.addVersion(version);
         projectRepository.save(project);
