@@ -1,6 +1,7 @@
-package org.example.projectmanagement.services.user;
+package org.example.projectmanagement.utils;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -31,15 +32,22 @@ public class JwtUtil {
     }
 
     public Claims getClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        try {
+            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        } catch (ExpiredJwtException e) {
+            log.error("Token has expired", e);
+            return null;
+        }
     }
 
     public Date getExpiration(String token) {
-        return getClaims(token).getExpiration();
+        Claims claims = getClaims(token);
+        return claims != null ? claims.getExpiration() : null;
     }
 
     public boolean isExpired(String token) {
-        return getExpiration(token).before(new Date());
+        Date expiration = getExpiration(token);
+        return expiration == null || expiration.before(new Date());
     }
 
     public String generate(String userId, String role, String tokenType) {
@@ -51,7 +59,6 @@ public class JwtUtil {
         final Date now = new Date();
         final Date exp = new Date(now.getTime() + expMillis);
 
-
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(claims.get("id"))
@@ -62,6 +69,7 @@ public class JwtUtil {
     }
 
     public String getUserIdFromToken(String token) {
-        return getClaims(token).get("id", String.class);
+        Claims claims = getClaims(token);
+        return claims != null ? claims.get("id", String.class) : null;
     }
 }

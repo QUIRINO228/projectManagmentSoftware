@@ -3,6 +3,7 @@ package org.example.projectmanagement.services.user;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.projectmanagement.dtos.UserDto;
+import org.example.projectmanagement.exceptions.users.EmailAlreadyInUseException;
 import org.example.projectmanagement.models.User;
 import org.example.projectmanagement.models.enums.UserRole;
 import org.example.projectmanagement.repositories.UserRepository;
@@ -19,8 +20,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     public boolean createUser(UserDto userDTO) {
         String email = userDTO.getEmail();
         if (isEmailAlreadyInUse(email)) {
-            log.warn("Email already in use: {}", email);
-            return false;
+            throw new EmailAlreadyInUseException("Email already in use: " + email);
         }
         User user = buildUserFromDto(userDTO);
         userRepository.save(user);
@@ -43,7 +43,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .firstName(userDto.getFirstName())
                 .lastName(userDto.getLastName())
                 .password(BCrypt.hashpw(userDto.getPassword(), BCrypt.gensalt()))
-                .role(UserRole.USER)
+                .role(userDto.getRole() != null ? userDto.getRole() : UserRole.USER)
                 .active(true)
                 .build();
     }

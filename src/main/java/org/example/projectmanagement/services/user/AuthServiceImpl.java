@@ -6,6 +6,7 @@ import org.example.projectmanagement.dtos.AuthRequestDto;
 import org.example.projectmanagement.dtos.AuthResponseDto;
 import org.example.projectmanagement.models.User;
 import org.example.projectmanagement.repositories.UserRepository;
+import org.example.projectmanagement.utils.JwtUtil;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
@@ -30,8 +31,7 @@ public class AuthServiceImpl implements AuthService {
                 return generateJwtToken(user);
             }
         }
-        log.warn("Authentication failed for user: {}", authRequestDto.getEmail());
-        return null;
+        throw new RuntimeException("Authentication failed");
     }
 
     private AuthResponseDto generateJwtToken(User registeredUser) {

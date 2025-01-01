@@ -6,10 +6,15 @@ import org.example.projectmanagement.dtos.TaskDto;
 import org.example.projectmanagement.models.Task;
 import org.example.projectmanagement.models.enums.AgileStatus;
 
+
 public class AgileTaskBridge extends AbstractTaskBridge {
+
+    private final TaskBridge taskBridge;
+
 
     public AgileTaskBridge(TaskBridge taskBridge) {
         super("Agile", taskBridge);
+        this.taskBridge = taskBridge;
     }
 
     @Override

@@ -3,6 +3,9 @@ package org.example.projectmanagement.services.teams;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.projectmanagement.dtos.TeamDto;
+import org.example.projectmanagement.exceptions.teams.InvalidTeamDataException;
+import org.example.projectmanagement.exceptions.teams.TeamNameExistsException;
+import org.example.projectmanagement.exceptions.teams.TeamNotFoundException;
 import org.example.projectmanagement.models.Team;
 import org.example.projectmanagement.repositories.TeamRepository;
 import org.example.projectmanagement.services.user.UserService;
@@ -24,17 +27,14 @@ public class TeamValidatorImpl implements TeamValidator {
         if (id != null) {
             Optional<Team> optionalTeam = teamRepository.findById(id);
             if (optionalTeam.isEmpty()) {
-                log.warn("Team ID not found: {}", id);
-                return false;
+                throw new TeamNotFoundException("Team ID not found: " + id);
             }
         }
-        if (!areUsersValid(teamDto.getMemberIds().stream().toList())) {
-            log.warn("Invalid users in team creation/update");
-            return false;
+        if (teamDto.getMemberIds() != null && !areUsersValid(teamDto.getMemberIds().stream().toList())) {
+            throw new InvalidTeamDataException("Invalid users in team creation/update");
         }
         if (teamRepository.existsByName(teamDto.getName())) {
-            log.warn("Team name already exists: {}", teamDto.getName());
-            return false;
+            throw new TeamNameExistsException("Team name already exists: " + teamDto.getName());
         }
         return true;
     }

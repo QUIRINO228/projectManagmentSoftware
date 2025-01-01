@@ -22,7 +22,4 @@ public class User {
     private UserRole role;
     private String password;
     private Boolean active;
-    private String basketId;
-    private String accessToken;
-    private String refreshToken;
 }

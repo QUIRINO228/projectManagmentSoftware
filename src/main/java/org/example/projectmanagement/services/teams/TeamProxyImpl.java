@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.projectmanagement.dtos.TeamDto;
 import org.example.projectmanagement.models.User;
+import org.example.projectmanagement.models.enums.Role;
+import org.example.projectmanagement.models.enums.UserRole;
 import org.example.projectmanagement.services.user.UserService;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +22,8 @@ public class TeamProxyImpl implements TeamProxy {
 
     private void checkAccess(String teamId, String token) throws AccessDeniedException {
         User user = userService.getUserByToken(token);
-        if (!teamService.isUserInTeam(teamId, user.getId())) {
-            throw new AccessDeniedException("Access denied: User is not a member of the team");
+        if (!user.getRole().equals(UserRole.ADMIN) && !teamService.isUserInTeam(teamId, user.getId())) {
+            throw new AccessDeniedException("Access denied: User is not an admin or a member of the team");
         }
     }
 
@@ -31,8 +33,7 @@ public class TeamProxyImpl implements TeamProxy {
     }
 
     @Override
-    public Optional<TeamDto> getTeamById(String id, String token) throws AccessDeniedException {
-        checkAccess(id, token);
+    public Optional<TeamDto> getTeamById(String id, String token) {
         return teamService.getTeamById(id);
     }
 

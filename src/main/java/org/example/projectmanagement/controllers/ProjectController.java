@@ -3,13 +3,18 @@ package org.example.projectmanagement.controllers;
 import lombok.AllArgsConstructor;
 import org.example.projectmanagement.dtos.ProjectDto;
 import org.example.projectmanagement.dtos.TaskDto;
+import org.example.projectmanagement.dtos.VersionDto;
 import org.example.projectmanagement.services.project.ProjectService;
+import org.example.projectmanagement.services.user.UserService;
+import org.example.projectmanagement.utils.TokenUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -18,7 +23,25 @@ import java.util.Optional;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final UserService userService;
 
+    @PostMapping("/{projectId}")
+    public ResponseEntity<VersionDto> addVersionToProject(
+            @PathVariable("projectId") String projectId,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        VersionDto createdVersion = projectService.addVersionToProject(projectId, file);
+        return ResponseEntity.ok(createdVersion);
+    }
+
+    @GetMapping("/get-projects")
+    public ResponseEntity<Object> getProjectsByUserToken(@RequestHeader("Authorization") String authorizationHeader) {
+        String token = TokenUtils.extractToken(authorizationHeader);
+        String userId = userService.getUserDtoByToken(token).getId();
+        List<ProjectDto> projectDto = projectService.getAllUsersProjects(userId);
+        return userId != null
+                ? ResponseEntity.ok().body(projectDto)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "User not found"));
+    }
 
     @PostMapping("/create")
     public ResponseEntity<ProjectDto> createProject(@RequestBody ProjectDto projectDto) {
@@ -27,10 +50,9 @@ public class ProjectController {
     }
 
     @GetMapping("/get/{id}")
-    public ResponseEntity<ProjectDto> getProjectById(@PathVariable String id) {
+    public ResponseEntity<ProjectDto> getProjectById(@PathVariable("id") String id) {
         Optional<ProjectDto> projectDto = projectService.getProjectById(id);
-        return projectDto.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.ok(projectDto.orElseThrow(() -> new RuntimeException("Project not found")));
     }
 
     @GetMapping("/all")
@@ -40,31 +62,22 @@ public class ProjectController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<ProjectDto> updateProject(@PathVariable String id, @RequestBody ProjectDto projectDto) {
+    public ResponseEntity<ProjectDto> updateProject(@PathVariable("id") String id, @RequestBody ProjectDto projectDto) {
         ProjectDto updatedProject = projectService.updateProject(id, projectDto);
         return ResponseEntity.ok(updatedProject);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteProject(@PathVariable String id) {
+    public ResponseEntity<Void> deleteProject(@PathVariable("id") String id) {
         projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping(value = "/{projectId}/create-task", consumes = "multipart/form-data")
-    public ResponseEntity<TaskDto> addTaskToProject(
-            @PathVariable String projectId,
-            @RequestPart("task") TaskDto taskDto,
-            @RequestPart("file") List<MultipartFile> files) throws IOException {
-        TaskDto createdTask = projectService.addTaskToProject(projectId, taskDto, files);
+    @PostMapping("/{projectId}/create-task")
+    public ResponseEntity<TaskDto> createTask(
+            @PathVariable("projectId") String projectId,
+            @RequestBody TaskDto taskDto) {
+        TaskDto createdTask = projectService.createTask(projectId, taskDto);
         return ResponseEntity.ok(createdTask);
-    }
-
-    @PutMapping("/{projectId}/tasks/{taskId}/status")
-    public void updateTaskStatus(
-            @PathVariable String projectId,
-            @PathVariable String taskId,
-            @RequestParam String newStatus) {
-        projectService.updateTaskStatus(projectId, taskId, newStatus);
     }
 }

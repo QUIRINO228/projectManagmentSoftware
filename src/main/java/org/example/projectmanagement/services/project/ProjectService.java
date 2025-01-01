@@ -2,6 +2,7 @@ package org.example.projectmanagement.services.project;
 
 import org.example.projectmanagement.dtos.ProjectDto;
 import org.example.projectmanagement.dtos.TaskDto;
+import org.example.projectmanagement.dtos.UserDto;
 import org.example.projectmanagement.dtos.VersionDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +18,10 @@ public interface ProjectService {
     Optional<ProjectDto> getProjectById(String id);
     List<ProjectDto> getAllProjects();
     void deleteProject(String id);
-    TaskDto addTaskToProject(String projectId, TaskDto taskDto, List<MultipartFile> files) throws IOException;
-    void updateTaskStatus(String projectId, String taskId, String newStatus);
+    TaskDto createTask(String projectId, TaskDto taskDto);
+    List<ProjectDto> getAllUsersProjects(String userId);
+
+    VersionDto addVersionToProject(String projectId, MultipartFile file) throws IOException;
+
+    void updateTaskStatus(String taskId, String newStatus);
 }

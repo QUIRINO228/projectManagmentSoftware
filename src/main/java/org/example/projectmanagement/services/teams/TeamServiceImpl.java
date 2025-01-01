@@ -2,11 +2,16 @@ package org.example.projectmanagement.services.teams;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.projectmanagement.dtos.ProjectDto;
 import org.example.projectmanagement.dtos.TeamDto;
+import org.example.projectmanagement.exceptions.teams.InvalidTeamDataException;
 import org.example.projectmanagement.models.Team;
+import org.example.projectmanagement.models.TeamMember;
+import org.example.projectmanagement.repositories.TeamMemberRepository;
 import org.example.projectmanagement.repositories.TeamRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -17,27 +22,46 @@ import java.util.stream.Collectors;
 public class TeamServiceImpl implements TeamService {
 
     private final TeamRepository teamRepository;
+    private final TeamMemberRepository teamMemberRepository;
     private final TeamValidator teamValidator;
     private final TeamConverter teamConverter;
 
     @Override
     public TeamDto createTeam(TeamDto teamDto) {
-        if (!teamValidator.isValidTeam(null, teamDto)) {
-            return null;
+        try {
+            if (!teamValidator.isValidTeam(null, teamDto)) {
+                throw new InvalidTeamDataException("Invalid team data for creation: " + teamDto);
+            }
+            Team team = saveTeam(teamDto);
+            log.info("Team created: {}", teamDto);
+            return teamConverter.buildTeamDtoFromTeam(team);
+        } catch (Exception e) {
+            throw new RuntimeException("Error creating team: " + teamDto, e);
         }
-        Team team = saveTeam(teamConverter.buildTeamFromDto(teamDto));
-        return teamConverter.buildTeamDtoFromTeam(team);
     }
 
     @Override
     public TeamDto updateTeam(String id, TeamDto teamDto) {
-        if (!teamValidator.isValidTeam(id, teamDto)) {
+        try {
+            if (!teamValidator.isValidTeam(id, teamDto)) {
+                log.warn("Invalid team data for update: {}", teamDto);
+                return null;
+            }
+
+            Team existingTeam = teamRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Team not found: " + id));
+            existingTeam.setTeamId(id);
+            existingTeam.setName(teamDto.getName());
+            existingTeam.setDescription(teamDto.getDescription());
+            existingTeam.setMemberIds(existingTeam.getMemberIds());
+            existingTeam.setProjectIds(existingTeam.getProjectIds());
+            Team updatedTeam = teamRepository.save(existingTeam);
+
+            return teamConverter.buildTeamDtoFromTeam(updatedTeam);
+        } catch (Exception e) {
+            log.error("Error updating team with id {}: {}", id, teamDto, e);
             return null;
         }
-        Team team = teamConverter.buildTeamFromDto(teamDto);
-        team.setTeamId(id);
-        saveTeam(team);
-        return teamConverter.buildTeamDtoFromTeam(team);
     }
 
     @Override
@@ -77,7 +101,24 @@ public class TeamServiceImpl implements TeamService {
         return teamDto.map(dto -> dto.getMemberIds().contains(userId)).orElse(false);
     }
 
-    private Team saveTeam(Team team) {
-        return teamRepository.save(team);
+    @Override
+    public List<TeamDto> getAllUsersTeams(String userId) {
+        return teamRepository.findAll().stream()
+                .filter(team -> Optional.ofNullable(team.getMemberIds()).orElse(Collections.emptySet()).contains(userId))
+                .map(teamConverter::buildTeamDtoFromTeam)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Team> getTeamsByUserId(String userId) {
+        List<String> teamIds = teamMemberRepository.findAllByUserId(userId).stream()
+                .map(TeamMember::getTeamId)
+                .collect(Collectors.toList());
+        return teamRepository.findAllById(teamIds);
+    }
+
+    @Override
+    public Team saveTeam(TeamDto teamDto) {
+        return teamRepository.save(teamConverter.buildTeamFromDto(teamDto));
     }
 }

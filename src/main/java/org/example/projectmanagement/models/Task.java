@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,7 +26,7 @@ public class Task {
     private String assignee;
     private String methodology;
     private String priority;
-    private String dueDate;
+    private LocalDate dueDate;
     private Set<Attachment> attachments = new HashSet<>();
 
 

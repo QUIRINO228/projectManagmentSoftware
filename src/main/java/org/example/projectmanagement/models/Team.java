@@ -22,6 +22,4 @@ public class Team {
     private String name;
     private String description;
     private Set<String> memberIds;
-    private LocalDate startDate;
-    private LocalDate endDate;
 }

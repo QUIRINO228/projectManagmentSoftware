@@ -1,8 +1,10 @@
 package org.example.projectmanagement.services.task;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.projectmanagement.dtos.TaskDto;
 import org.example.projectmanagement.models.Attachment;
+import org.example.projectmanagement.models.Project;
 import org.example.projectmanagement.models.Task;
 import org.example.projectmanagement.repositories.TaskRepository;
 import org.example.projectmanagement.services.attachment.AttachmentService;
@@ -16,6 +18,7 @@ import java.util.UUID;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class TaskServiceImpl implements TaskService {
 
     private final TaskValidator taskValidator;
@@ -30,10 +33,19 @@ public class TaskServiceImpl implements TaskService {
         task.setTaskId(UUID.randomUUID().toString());
         return taskConverter.buildTaskDtoFromTask(taskRepository.save(task));
     }
+    @Override
+    public TaskDto addAttachmentsToTask(String taskId, List<MultipartFile> files) throws IOException {
+        TaskDto taskDto = getTaskById(taskId)
+                .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
+
+        Task task = taskConverter.buildTaskFromDto(taskDto);
+        Task savedTask = saveTask(task, files);
+        return taskConverter.buildTaskDtoFromTask(savedTask);
+    }
 
     @Override
-    public Optional<Task> getTaskById(String taskId) {
-        return taskRepository.findById(taskId);
+    public Optional<TaskDto> getTaskById(String taskId) {
+        return taskRepository.findById(taskId).map(taskConverter::buildTaskDtoFromTask);
     }
 
     @Override
@@ -44,7 +56,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void saveTask(Task task) {
-        taskRepository.save(task);
+    public Task saveTask(Task task) {
+        log.info("Saving task: {}", task.getStatus());
+        return taskRepository.save(task);
     }
 }

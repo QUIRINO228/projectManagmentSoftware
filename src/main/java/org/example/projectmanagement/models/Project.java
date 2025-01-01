@@ -28,7 +28,6 @@ public class Project {
     private String methodology;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Set<Task> tasks = new HashSet<>();
 
     // Agile-specific attributes
     private Integer sprintDuration;

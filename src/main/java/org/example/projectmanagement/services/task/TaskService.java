@@ -11,10 +11,10 @@ import java.util.Optional;
 
 public interface TaskService {
     Task saveTask(Task task, List<MultipartFile> files) throws IOException;
-
-    void saveTask(Task task);
-
+    Task saveTask(Task task);
     TaskDto createTask(TaskDto taskDto);
+    Optional<TaskDto> getTaskById(String taskId);
 
-    Optional<Task> getTaskById(String taskId);
+    TaskDto addAttachmentsToTask(String taskId, List<MultipartFile> files) throws IOException;
+
 }

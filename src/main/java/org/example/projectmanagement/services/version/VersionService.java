@@ -8,5 +8,4 @@ import java.util.Optional;
 
 public interface VersionService {
     Optional<VersionDto> getVersionById(String projectId, String versionId);
-    VersionDto addVersionToProject(String projectId, VersionDto versionDto, MultipartFile file) throws IOException;
 }

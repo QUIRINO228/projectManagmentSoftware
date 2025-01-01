@@ -6,7 +6,16 @@ import org.example.projectmanagement.bridge.impl.RupTaskBridge;
 
 public class TaskBridgeProvider {
 
-    public static TaskBridge getBridge(String methodology, TaskBridge taskBridge) {
+    private static TaskBridge taskBridge;
+
+    public static void setTaskBridge(TaskBridge taskBridge) {
+        TaskBridgeProvider.taskBridge = taskBridge;
+    }
+
+    public static TaskBridge getBridge(String methodology) {
+        if (taskBridge == null) {
+            throw new IllegalStateException("TaskBridge is not set. Please set it before calling getBridge.");
+        }
         return switch (methodology) {
             case "Agile" -> new AgileTaskBridge(taskBridge);
             case "Kanban" -> new KanbanTaskBridge(taskBridge);
